@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCL Workflow Portal</title>
+<style>
+  :root {
+    --hub-navy: #263746;
+    --hub-blue: #0678d5;
+    --hub-light: #e3e3e3;
+    --hub-dark: #18252d;
+    --hub-mid: #385263;
+    --hub-gold: #f3b921;
+    --hub-red: #ac1534;
+    --hub-green: #3ebd3e;
+    --white: #ffffff;
+    --bg: #f4f6f8;
+    --card-bg: #ffffff;
+    --border: #dce2e8;
+    --text-primary: #18252d;
+    --text-secondary: #5a6a76;
+    --text-muted: #8a9aa6;
+    --sidebar-w: 260px;
+    --header-h: 64px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+
+  /* ---- HEADER ---- */
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: var(--header-h);
+    background: var(--hub-navy);
+    display: flex; align-items: center;
+    padding: 0 24px;
+    gap: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  }
+
+  .header-logo {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none;
+  }
+
+  .header-logo img {
+    height: 32px;
+    filter: brightness(0) invert(1);
+  }
+
+  .header-divider {
+    width: 1px; height: 28px;
+    background: rgba(255,255,255,0.25);
+    margin: 0 4px;
+  }
+
+  .header-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: 0.3px;
+  }
+
+  .header-sub {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    font-weight: 400;
+    margin-left: 2px;
+  }
+
+  .header-right {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  .admin-badge {
+    display: none;
+    background: var(--hub-gold);
+    color: var(--hub-dark);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 12px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .admin-badge.visible { display: block; }
+
+  #adminToggleBtn {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: var(--white);
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  #adminToggleBtn:hover { background: rgba(255,255,255,0.2); }
+
+  /* ---- LAYOUT ---- */
+  .layout {
+    display: flex;
+    margin-top: var(--header-h);
+    min-height: calc(100vh - var(--header-h));
+  }
+
+  /* ---- SIDEBAR ---- */
+  aside {
+    width: var(--sidebar-w);
+    background: var(--hub-dark);
+    flex-shrink: 0;
+    position: fixed;
+    top: var(--header-h);
+    bottom: 0;
+    left: 0;
+    overflow-y: auto;
+    padding: 20px 0 40px;
+  }
+
+  .sidebar-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    padding: 0 20px 8px;
+    margin-top: 16px;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 20px;
+    color: rgba(255,255,255,0.75);
+    font-size: 13.5px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+    user-select: none;
+  }
+
+  .nav-item:hover {
+    background: rgba(255,255,255,0.06);
+    color: var(--white);
+  }
+
+  .nav-item.active {
+    background: rgba(6,120,213,0.18);
+    border-left-color: var(--hub-blue);
+    color: var(--white);
+  }
+
+  .nav-icon {
+    width: 20px; height: 20px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+
+  .nav-count {
+    margin-left: auto;
+    background: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.6);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+    min-width: 22px;
+    text-align: center;
+  }
+
+  /* ---- MAIN CONTENT ---- */
+  main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    padding: 32px;
+    max-width: 1100px;
+  }
+
+  /* ---- PAGE HEADER ---- */
+  .page-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 28px;
+    gap: 16px;
+  }
+
+  .page-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--hub-navy);
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 3px;
+  }
+
+  .page-actions {
+    display: flex; gap: 10px; align-items: center;
+  }
+
+  .btn {
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 8px 18px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .btn-primary {
+    background: var(--hub-blue);
+    color: var(--white);
+  }
+  .btn-primary:hover { background: #0569be; }
+
+  .btn-secondary {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--text-primary);
+  }
+  .btn-secondary:hover { background: var(--bg); }
+
+  .btn-danger {
+    background: transparent;
+    border: 1.5px solid #f5c2c2;
+    color: var(--hub-red);
+  }
+  .btn-danger:hover { background: #fdf2f2; }
+
+  .btn.admin-only { display: none; }
+  .btn.admin-only.visible { display: flex; }
+
+  /* ---- CATEGORY CARDS GRID ---- */
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .category-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 16px 16px;
+    cursor: pointer;
+    transition: all 0.18s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .category-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--cat-color, var(--hub-blue));
+  }
+
+  .category-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+    border-color: var(--cat-color, var(--hub-blue));
+  }
+
+  .category-card.active {
+    border-color: var(--cat-color, var(--hub-blue));
+    box-shadow: 0 0 0 3px rgba(6,120,213,0.12);
+  }
+
+  .cat-icon {
+    width: 38px; height: 38px;
+    border-radius: 8px;
+    background: var(--cat-bg, #e8f3fd);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+
+  .cat-name {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--hub-navy);
+    margin-bottom: 4px;
+  }
+
+  .cat-count {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* ---- DETAIL PANEL ---- */
+  #detailPanel {
+    display: none;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 32px;
+    overflow: hidden;
+  }
+
+  .detail-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    background: #f9fafb;
+  }
+
+  .detail-title-row {
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  .detail-cat-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  .detail-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--hub-navy);
+  }
+
+  .detail-actions {
+    display: flex; gap: 8px;
+  }
+
+  .detail-body {
+    padding: 24px;
+  }
+
+  /* ---- CHECKLISTS ---- */
+  .checklist-section {
+    margin-bottom: 28px;
+  }
+
+  .checklist-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .checklist-items {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .checklist-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 14px;
+    background: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-size: 13.5px;
+    color: var(--text-primary);
+    transition: background 0.12s;
+  }
+
+  .checklist-item:hover { background: #f1f4f7; }
+
+  .checklist-item input[type="checkbox"] {
+    margin-top: 2px;
+    flex-shrink: 0;
+    width: 15px; height: 15px;
+    accent-color: var(--hub-blue);
+    cursor: pointer;
+  }
+
+  .checklist-item.checked .item-text {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+
+  .item-text { flex: 1; line-height: 1.4; }
+
+  .item-note {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    font-style: italic;
+  }
+
+  .item-delete {
+    display: none;
+    background: none; border: none;
+    color: #ccc; cursor: pointer;
+    font-size: 14px; padding: 0 2px;
+    flex-shrink: 0;
+    transition: color 0.15s;
+  }
+  .item-delete:hover { color: var(--hub-red); }
+
+  .admin-active .item-delete { display: block; }
+
+  .add-item-row {
+    display: none;
+    margin-top: 8px;
+    gap: 8px;
+  }
+  .add-item-row.visible { display: flex; }
+
+  .add-item-input {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: var(--text-primary);
+    background: var(--white);
+    outline: none;
+  }
+  .add-item-input:focus { border-color: var(--hub-blue); }
+
+  .add-section-row {
+    display: none;
+    margin-top: 16px;
+    gap: 8px;
+    align-items: center;
+  }
+  .add-section-row.visible { display: flex; }
+
+  /* ---- NOTES AREA ---- */
+  .notes-area {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .notes-label {
+    padding: 8px 14px;
+    background: #f9fafb;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .notes-textarea {
+    width: 100%;
+    min-height: 80px;
+    border: none;
+    outline: none;
+    padding: 12px 14px;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: var(--text-primary);
+    background: var(--white);
+    resize: vertical;
+  }
+
+  /* ---- EMPTY STATE ---- */
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+  }
+
+  .empty-icon { font-size: 36px; margin-bottom: 12px; }
+  .empty-text { font-size: 14px; }
+
+  /* ---- DASHBOARD ---- */
+  #dashboardView { display: block; }
+
+  .welcome-banner {
+    background: linear-gradient(135deg, var(--hub-navy) 0%, var(--hub-mid) 100%);
+    border-radius: 10px;
+    padding: 24px 28px;
+    color: var(--white);
+    margin-bottom: 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px;
+  }
+
+  .welcome-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .welcome-sub { font-size: 13px; color: rgba(255,255,255,0.7); }
+
+  .hub-logo-header {
+    height: 36px;
+    filter: brightness(0) invert(1);
+    opacity: 0.6;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+
+  .stat-num {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--hub-navy);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ---- ADMIN PANEL ---- */
+  #adminPanel {
+    display: none;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+  #adminPanel.visible { display: block; }
+
+  .admin-panel-header {
+    background: var(--hub-navy);
+    color: var(--white);
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .admin-panel-body {
+    padding: 20px;
+    display: flex; flex-wrap: wrap; gap: 12px;
+  }
+
+  .admin-team-card {
+    background: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px;
+  }
+
+  .admin-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--hub-blue);
+    color: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .admin-name { font-weight: 700; color: var(--hub-navy); }
+  .admin-role { font-size: 11px; color: var(--text-muted); }
+
+  /* ---- MODAL ---- */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.45);
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--white);
+    border-radius: 12px;
+    width: 100%; max-width: 440px;
+    padding: 32px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+
+  .modal-title {
+    font-size: 18px; font-weight: 700;
+    color: var(--hub-navy);
+    margin-bottom: 6px;
+  }
+
+  .modal-sub {
+    font-size: 13px; color: var(--text-secondary);
+    margin-bottom: 24px;
+  }
+
+  .modal-input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    padding: 10px 14px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: var(--text-primary);
+    outline: none;
+    margin-bottom: 16px;
+    transition: border-color 0.15s;
+  }
+  .modal-input:focus { border-color: var(--hub-blue); }
+
+  .modal-error {
+    color: var(--hub-red);
+    font-size: 12px;
+    margin-bottom: 12px;
+    display: none;
+  }
+  .modal-error.visible { display: block; }
+
+  .modal-actions {
+    display: flex; gap: 10px; justify-content: flex-end;
+  }
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width: 700px) {
+    aside { display: none; }
+    main { margin-left: 0; padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <img src="https://raw.githubusercontent.com/samantharank/hub-bingo/main/hub-logo.png" alt="HUB" style="height:30px; filter:brightness(0) invert(1);">
+  <div class="header-divider"></div>
+  <div>
+    <div class="header-title">SCL Workflow Portal</div>
+    <div class="header-sub">Personal Insurance Team</div>
+  </div>
+  <div class="header-right">
+    <span class="admin-badge" id="adminBadge">Admin</span>
+    <button id="adminToggleBtn" onclick="handleAdminToggle()">Admin Login</button>
+  </div>
+</header>
+
+<!-- ADMIN LOGIN MODAL -->
+<div class="modal-overlay" id="adminModal">
+  <div class="modal">
+    <div class="modal-title">Admin Access</div>
+    <div class="modal-sub">Enter the admin password to manage checklists and SOPs.</div>
+    <input class="modal-input" type="password" id="adminPasswordInput" placeholder="Password" onkeydown="if(event.key==='Enter')checkAdminPassword()">
+    <div class="modal-error" id="adminError">Incorrect password. Please try again.</div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeAdminModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="checkAdminPassword()">Sign In</button>
+    </div>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sidebar-section-label">Navigation</div>
+    <div class="nav-item active" onclick="showDashboard(this)" data-view="dashboard">
+      <span class="nav-icon">&#9632;</span> Dashboard
+    </div>
+
+    <div class="sidebar-section-label" style="margin-top:20px;">Categories</div>
+    <div id="sidebarCategories"></div>
+  </aside>
+
+  <!-- MAIN -->
+  <main id="mainContent">
+
+    <!-- DASHBOARD VIEW -->
+    <div id="dashboardView">
+      <div class="welcome-banner">
+        <div>
+          <div class="welcome-title">SCL Workflow Portal</div>
+          <div class="welcome-sub">Personal Insurance Team - St. Catharines / London</div>
+        </div>
+        <img src="https://raw.githubusercontent.com/samantharank/hub-bingo/main/hub-logo.png" alt="HUB" class="hub-logo-header">
+      </div>
+
+      <div class="stats-row" id="statsRow"></div>
+
+      <!-- Admin Panel -->
+      <div id="adminPanel">
+        <div class="admin-panel-header">&#128274; Admin Team</div>
+        <div class="admin-panel-body" id="adminTeamList"></div>
+      </div>
+
+      <div style="font-size:15px; font-weight:700; color:var(--hub-navy); margin-bottom:16px;">All Categories</div>
+      <div class="categories-grid" id="categoriesGrid"></div>
+    </div>
+
+    <!-- CATEGORY DETAIL VIEW -->
+    <div id="categoryView" style="display:none;">
+      <div class="page-header">
+        <div>
+          <div style="font-size:12px; color:var(--text-muted); margin-bottom:4px; cursor:pointer;" onclick="showDashboard()">
+            &#8592; Back to Dashboard
+          </div>
+          <div class="page-title" id="catViewTitle">Category</div>
+          <div class="page-subtitle" id="catViewSub"></div>
+        </div>
+        <div class="page-actions" id="catViewActions"></div>
+      </div>
+
+      <div id="checklistContainer"></div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const ADMIN_PASSWORD = 'SCLAdmin2026!';
+let isAdmin = false;
+let currentCategory = null;
+
+const ADMINS = [
+  { name: 'Jessica Korpan', initials: 'JK' },
+  { name: 'Kayleigh Moore', initials: 'KM' },
+  { name: 'Sara Bogaart', initials: 'SB' },
+  { name: 'Amanda McKay', initials: 'AM' },
+  { name: 'Courtney Cammidge', initials: 'CC' }
+];
+
+const CATEGORIES = [
+  { id: 'qc', name: 'QC', icon: '&#10003;', color: '#0678d5', bg: '#e8f3fd', sections: ['Quality Control Checklist', 'Review Steps'] },
+  { id: 'auto', name: 'Auto', icon: '&#128663;', color: '#263746', bg: '#e8ebee', sections: ['New Policy', 'Renewal', 'Changes', 'Cancellations'] },
+  { id: 'motorcycle', name: 'Motorcycle', icon: '&#127949;', color: '#f3b921', bg: '#fdf5e0', sections: ['New Policy', 'Renewal', 'Changes'] },
+  { id: 'property', name: 'Property', icon: '&#127968;', color: '#3ebd3e', bg: '#e9f9e9', sections: ['New Policy', 'Renewal', 'Changes'] },
+  { id: 'toys', name: 'Toys', icon: '&#127946;', color: '#00aeef', bg: '#e0f5fd', sections: ['Watercraft', 'Snowmobile', 'ATV / Other'] },
+  { id: 'cancellations', name: 'Cancellations', icon: '&#10005;', color: '#ac1534', bg: '#faeaed', sections: ['Cancellation Steps', 'Required Documents'] },
+  { id: 'estate', name: 'Estate & POA', icon: '&#128196;', color: '#385263', bg: '#eaeff2', sections: ['Estate of Deceased', 'Power of Attorney'] },
+  { id: 'claims', name: 'Claims', icon: '&#128220;', color: '#e07b00', bg: '#fef3e2', sections: ['Claim Intake', 'Follow-Up Steps'] },
+  { id: 'billing', name: 'Billing', icon: '&#36;', color: '#1818b5', bg: '#ebebfa', sections: ['Payment Processing', 'NSF / Returns', 'Adjustments'] },
+  { id: 'ars', name: 'ARS', icon: '&#128203;', color: '#757584', bg: '#efeff2', sections: ['ARS Procedures'] }
+];
+
+// Default checklist items per category
+const DEFAULT_ITEMS = {
+  qc: {
+    'Quality Control Checklist': ['Verify client information is complete and accurate', 'Confirm coverage details match application', 'Check for missing signatures or documents', 'Review premium calculation', 'Confirm policy effective date'],
+    'Review Steps': ['Send confirmation to client', 'Update broker notes', 'File documents in system']
+  },
+  auto: {
+    'New Policy': ['Collect completed application', 'Pull MVR for all drivers', 'Confirm VIN and vehicle details', 'Bind coverage and issue pink slips', 'Send policy documents to client'],
+    'Renewal': ['Review renewal terms and premium', 'Confirm no changes to vehicles or drivers', 'Process renewal payment', 'Send renewal confirmation'],
+    'Changes': ['Document change request in notes', 'Process endorsement', 'Issue updated documents', 'Confirm changes with client'],
+    'Cancellations': ['Confirm reason for cancellation', 'Calculate pro-rata refund if applicable', 'Issue cancellation notice', 'Update system records']
+  },
+  motorcycle: {
+    'New Policy': ['Collect application and rider history', 'Confirm bike details (year, make, model, VIN)', 'Bind seasonal or annual coverage', 'Issue policy documents'],
+    'Renewal': ['Review renewal and confirm seasonal storage dates', 'Process renewal if approved', 'Send documents to client'],
+    'Changes': ['Document change in file', 'Process endorsement', 'Issue updated certificate']
+  },
+  property: {
+    'New Policy': ['Complete property inspection checklist', 'Confirm address, construction, and updates', 'Bind coverage', 'Issue policy documents and invoice'],
+    'Renewal': ['Review renewal terms', 'Check for any property updates or renovations', 'Process renewal premium', 'Confirm with client'],
+    'Changes': ['Document change request', 'Process endorsement', 'Issue updated documents']
+  },
+  toys: {
+    'Watercraft': ['Confirm make, model, year, and HP', 'Collect marine survey if required', 'Bind coverage', 'Issue policy documents'],
+    'Snowmobile': ['Confirm sled details and storage location', 'Bind seasonal coverage', 'Issue documents'],
+    'ATV / Other': ['Confirm vehicle type and usage', 'Bind coverage', 'Issue policy documents']
+  },
+  cancellations: {
+    'Cancellation Steps': ['Receive written cancellation request', 'Confirm effective date', 'Calculate any refund owed', 'Issue cancellation notice to insurer', 'Notify client in writing'],
+    'Required Documents': ['Signed cancellation request letter', 'Original pink slips (auto)', 'Confirmation of alternate coverage (if applicable)']
+  },
+  estate: {
+    'Estate of Deceased': ['Obtain copy of death certificate', 'Confirm executor / estate trustee information', 'Review policies in force', 'Update insured name to estate', 'Notify insurer of change in risk', 'Document all actions in file notes'],
+    'Power of Attorney': ['Obtain certified copy of POA document', 'Confirm POA is active and valid', 'Update authorization records', 'Note POA on all relevant policies']
+  },
+  claims: {
+    'Claim Intake': ['Record date, time, and nature of loss', 'Collect insured contact information', 'Log claim with insurer', 'Provide claim number to client', 'Document in broker system'],
+    'Follow-Up Steps': ['Follow up with adjuster within 48-72 hours', 'Update client on status', 'Document all communications', 'Close file when settlement confirmed']
+  },
+  billing: {
+    'Payment Processing': ['Confirm payment method on file', 'Process payment in broker system', 'Issue receipt to client', 'Update policy payment notes'],
+    'NSF / Returns': ['Note NSF in file', 'Contact client immediately', 'Advise of NSF fee', 'Arrange replacement payment', 'Notify insurer if policy at risk of cancellation'],
+    'Adjustments': ['Calculate adjustment amount', 'Process credit or debit endorsement', 'Confirm with client', 'Update billing schedule']
+  },
+  ars: {
+    'ARS Procedures': ['Review ARS queue daily', 'Process outstanding items by priority', 'Document all ARS actions in file notes', 'Escalate unresolved items to team lead', 'Clear queue and confirm completion']
+  }
+};
+
+// DATA STORE
+let data = JSON.parse(localStorage.getItem('sclPortalData') || 'null');
+if (!data) {
+  data = {};
+  CATEGORIES.forEach(cat => {
+    data[cat.id] = { sections: {} };
+    const defaults = DEFAULT_ITEMS[cat.id] || {};
+    cat.sections.forEach(sec => {
+      data[cat.id].sections[sec] = {
+        items: (defaults[sec] || []).map((text, i) => ({ id: i + 1, text, note: '' })),
+        nextId: (defaults[sec] || []).length + 1
+      };
+    });
+  });
+  saveData();
+}
+
+function saveData() {
+  localStorage.setItem('sclPortalData', JSON.stringify(data));
+}
+
+function getItemCount(catId) {
+  const catData = data[catId];
+  if (!catData) return 0;
+  return Object.values(catData.sections).reduce((sum, sec) => sum + sec.items.length, 0);
+}
+
+// ---- INIT ----
+function init() {
+  buildSidebar();
+  buildCategoriesGrid();
+  buildStatsRow();
+  buildAdminTeam();
+}
+
+function buildSidebar() {
+  const container = document.getElementById('sidebarCategories');
+  container.innerHTML = CATEGORIES.map(cat => `
+    <div class="nav-item" onclick="openCategory('${cat.id}', this)" data-cat="${cat.id}">
+      <span class="nav-icon" style="font-size:14px;">${cat.icon}</span>
+      ${cat.name}
+      <span class="nav-count">${getItemCount(cat.id)}</span>
+    </div>
+  `).join('');
+}
+
+function buildCategoriesGrid() {
+  const grid = document.getElementById('categoriesGrid');
+  grid.innerHTML = CATEGORIES.map(cat => `
+    <div class="category-card" onclick="openCategory('${cat.id}')" style="--cat-color:${cat.color}; --cat-bg:${cat.bg}">
+      <div class="cat-icon" style="background:${cat.bg}; color:${cat.color};">${cat.icon}</div>
+      <div class="cat-name">${cat.name}</div>
+      <div class="cat-count">${getItemCount(cat.id)} items</div>
+    </div>
+  `).join('');
+}
+
+function buildStatsRow() {
+  const totalItems = CATEGORIES.reduce((sum, cat) => sum + getItemCount(cat.id), 0);
+  const stats = [
+    { num: CATEGORIES.length, label: 'Categories' },
+    { num: totalItems, label: 'Total Items' },
+    { num: ADMINS.length, label: 'Admins' },
+    { num: Object.values(data).reduce((sum, cat) => sum + Object.keys(cat.sections).length, 0), label: 'Sections' }
+  ];
+  document.getElementById('statsRow').innerHTML = stats.map(s => `
+    <div class="stat-card">
+      <div class="stat-num">${s.num}</div>
+      <div class="stat-label">${s.label}</div>
+    </div>
+  `).join('');
+}
+
+function buildAdminTeam() {
+  document.getElementById('adminTeamList').innerHTML = ADMINS.map(a => `
+    <div class="admin-team-card">
+      <div class="admin-avatar">${a.initials}</div>
+      <div>
+        <div class="admin-name">${a.name}</div>
+        <div class="admin-role">Admin Access</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ---- NAVIGATION ----
+function showDashboard(el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const dashNav = document.querySelector('[data-view="dashboard"]');
+  if (dashNav) dashNav.classList.add('active');
+  document.getElementById('dashboardView').style.display = 'block';
+  document.getElementById('categoryView').style.display = 'none';
+  buildCategoriesGrid();
+  buildStatsRow();
+  buildSidebar();
+  currentCategory = null;
+}
+
+function openCategory(catId, navEl) {
+  currentCategory = catId;
+  const cat = CATEGORIES.find(c => c.id === catId);
+  if (!cat) return;
+
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const target = navEl || document.querySelector(`[data-cat="${catId}"]`);
+  if (target) target.classList.add('active');
+
+  document.getElementById('dashboardView').style.display = 'none';
+  document.getElementById('categoryView').style.display = 'block';
+  document.getElementById('catViewTitle').textContent = cat.name;
+  document.getElementById('catViewSub').textContent = `${getItemCount(catId)} items across ${cat.sections.length} sections`;
+
+  renderCategoryActions(cat);
+  renderChecklist(cat);
+}
+
+function renderCategoryActions(cat) {
+  const actions = document.getElementById('catViewActions');
+  actions.innerHTML = `
+    <button class="btn btn-primary admin-only${isAdmin ? ' visible' : ''}" onclick="addSection('${cat.id}')">+ Add Section</button>
+  `;
+}
+
+function renderChecklist(cat) {
+  const container = document.getElementById('checklistContainer');
+  const catData = data[cat.id];
+  if (!catData) return;
+
+  let html = '';
+  cat.sections.forEach(secName => {
+    const sec = catData.sections[secName];
+    if (!sec) return;
+    html += `
+      <div class="checklist-section" id="sec_${cat.id}_${slugify(secName)}">
+        <div class="checklist-section-title">
+          <span>${secName}</span>
+          ${isAdmin ? `<button class="btn btn-secondary" style="font-size:11px;padding:4px 10px;" onclick="showAddItemRow('${cat.id}','${secName}')">+ Add Item</button>` : ''}
+        </div>
+        <div class="checklist-items" id="items_${cat.id}_${slugify(secName)}">
+          ${sec.items.length === 0 ? `<div class="empty-state" style="padding:20px;"><div class="empty-text">No items yet${isAdmin ? ' - click + Add Item to get started' : ''}.</div></div>` : ''}
+          ${sec.items.map(item => renderItem(cat.id, secName, item)).join('')}
+        </div>
+        <div class="add-item-row" id="addrow_${cat.id}_${slugify(secName)}">
+          <input class="add-item-input" type="text" placeholder="New checklist item..." id="newinput_${cat.id}_${slugify(secName)}"
+            onkeydown="if(event.key==='Enter')saveNewItem('${cat.id}','${secName}')">
+          <button class="btn btn-primary" onclick="saveNewItem('${cat.id}','${secName}')">Add</button>
+          <button class="btn btn-secondary" onclick="hideAddItemRow('${cat.id}','${secName}')">Cancel</button>
+        </div>
+      </div>
+    `;
+  });
+
+  if (html === '') {
+    html = `<div class="empty-state"><div class="empty-icon">&#128196;</div><div class="empty-text">No sections found.</div></div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+function renderItem(catId, secName, item) {
+  return `
+    <div class="checklist-item${isAdmin ? ' admin-active' : ''}" id="item_${catId}_${item.id}">
+      <input type="checkbox" onchange="toggleItem('${catId}','${secName}',${item.id},this)">
+      <div class="item-text">${item.text}${item.note ? `<div class="item-note">${item.note}</div>` : ''}</div>
+      <button class="item-delete" onclick="deleteItem('${catId}','${secName}',${item.id})" title="Delete">&#10005;</button>
+    </div>
+  `;
+}
+
+function slugify(str) {
+  return str.toLowerCase().replace(/[^a-z0-9]/g, '_');
+}
+
+// ---- ITEM ACTIONS ----
+function showAddItemRow(catId, secName) {
+  const row = document.getElementById(`addrow_${catId}_${slugify(secName)}`);
+  if (row) { row.classList.add('visible'); row.querySelector('input').focus(); }
+}
+
+function hideAddItemRow(catId, secName) {
+  const row = document.getElementById(`addrow_${catId}_${slugify(secName)}`);
+  if (row) { row.classList.remove('visible'); row.querySelector('input').value = ''; }
+}
+
+function saveNewItem(catId, secName) {
+  const input = document.getElementById(`newinput_${catId}_${slugify(secName)}`);
+  const text = input.value.trim();
+  if (!text) return;
+
+  const sec = data[catId].sections[secName];
+  const newItem = { id: sec.nextId++, text, note: '' };
+  sec.items.push(newItem);
+  saveData();
+
+  const container = document.getElementById(`items_${catId}_${slugify(secName)}`);
+  const empties = container.querySelectorAll('.empty-state');
+  empties.forEach(e => e.remove());
+  container.insertAdjacentHTML('beforeend', renderItem(catId, secName, newItem));
+  input.value = '';
+
+  buildSidebar();
+  document.getElementById('catViewSub').textContent = `${getItemCount(catId)} items across ${CATEGORIES.find(c=>c.id===catId).sections.length} sections`;
+}
+
+function deleteItem(catId, secName, itemId) {
+  if (!confirm('Delete this item?')) return;
+  data[catId].sections[secName].items = data[catId].sections[secName].items.filter(i => i.id !== itemId);
+  saveData();
+  const el = document.getElementById(`item_${catId}_${itemId}`);
+  if (el) el.remove();
+  buildSidebar();
+}
+
+function toggleItem(catId, secName, itemId, checkbox) {
+  const el = document.getElementById(`item_${catId}_${itemId}`);
+  if (el) el.classList.toggle('checked', checkbox.checked);
+}
+
+function addSection(catId) {
+  const name = prompt('Enter section name:');
+  if (!name || !name.trim()) return;
+  const trimmed = name.trim();
+  const cat = CATEGORIES.find(c => c.id === catId);
+  if (cat.sections.includes(trimmed)) { alert('Section already exists.'); return; }
+  cat.sections.push(trimmed);
+  data[catId].sections[trimmed] = { items: [], nextId: 1 };
+  saveData();
+  openCategory(catId);
+}
+
+// ---- ADMIN ----
+function handleAdminToggle() {
+  if (isAdmin) {
+    isAdmin = false;
+    document.getElementById('adminBadge').classList.remove('visible');
+    document.getElementById('adminToggleBtn').textContent = 'Admin Login';
+    document.getElementById('adminPanel').classList.remove('visible');
+    if (currentCategory) openCategory(currentCategory);
+    else showDashboard();
+  } else {
+    document.getElementById('adminModal').classList.add('open');
+    document.getElementById('adminPasswordInput').value = '';
+    document.getElementById('adminError').classList.remove('visible');
+    setTimeout(() => document.getElementById('adminPasswordInput').focus(), 100);
+  }
+}
+
+function checkAdminPassword() {
+  const pw = document.getElementById('adminPasswordInput').value;
+  if (pw === ADMIN_PASSWORD) {
+    isAdmin = true;
+    closeAdminModal();
+    document.getElementById('adminBadge').classList.add('visible');
+    document.getElementById('adminToggleBtn').textContent = 'Sign Out';
+    document.getElementById('adminPanel').classList.add('visible');
+    document.querySelectorAll('.btn.admin-only').forEach(b => b.classList.add('visible'));
+    if (currentCategory) openCategory(currentCategory);
+    else buildCategoriesGrid();
+  } else {
+    document.getElementById('adminError').classList.add('visible');
+    document.getElementById('adminPasswordInput').select();
+  }
+}
+
+function closeAdminModal() {
+  document.getElementById('adminModal').classList.remove('open');
+}
+
+document.getElementById('adminModal').addEventListener('click', function(e) {
+  if (e.target === this) closeAdminModal();
+});
+
+init();
+</script>
+</body>
+</html>
