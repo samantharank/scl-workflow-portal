@@ -8,21 +8,11 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
-    --hub-navy: #263746;
-    --hub-blue: #0678d5;
-    --hub-dark: #18252d;
-    --hub-mid: #385263;
-    --hub-gold: #f3b921;
-    --hub-red: #ac1534;
-    --white: #ffffff;
-    --bg: #f4f6f8;
-    --card-bg: #ffffff;
-    --border: #dce2e8;
-    --text-primary: #18252d;
-    --text-secondary: #5a6a76;
-    --text-muted: #8a9aa6;
-    --sidebar-w: 260px;
-    --header-h: 64px;
+    --hub-navy: #263746; --hub-blue: #0678d5; --hub-dark: #18252d;
+    --hub-mid: #385263; --hub-gold: #f3b921; --hub-red: #ac1534;
+    --white: #ffffff; --bg: #f4f6f8; --card-bg: #ffffff;
+    --border: #dce2e8; --text-primary: #18252d; --text-secondary: #5a6a76;
+    --text-muted: #8a9aa6; --sidebar-w: 260px; --header-h: 64px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; }
@@ -37,6 +27,13 @@
   /* TOAST */
   .toast { position: fixed; bottom: 24px; right: 24px; background: var(--hub-navy); color: var(--white); padding: 10px 18px; border-radius: 8px; font-size: 13px; opacity: 0; transform: translateY(8px); transition: all 0.25s; pointer-events: none; z-index: 500; }
   .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* LIGHTBOX */
+  #lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 300; align-items: center; justify-content: center; }
+  #lightbox.open { display: flex; }
+  #lightboxImg { max-width: 90vw; max-height: 88vh; border-radius: 8px; box-shadow: 0 8px 40px rgba(0,0,0,0.5); }
+  #lightboxClose { position: absolute; top: 20px; right: 24px; background: rgba(255,255,255,0.15); border: none; color: var(--white); font-size: 20px; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  #lightboxClose:hover { background: rgba(255,255,255,0.28); }
 
   /* LOGIN */
   #loginScreen { min-height: 100vh; background: var(--hub-dark); display: flex; align-items: center; justify-content: center; padding: 24px; }
@@ -150,20 +147,52 @@
 
   /* CHECKLIST */
   .checklist-section { margin-bottom: 28px; }
-  .checklist-section-title { font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+  .checklist-section-title { font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .section-title-actions { display: flex; gap: 6px; flex-shrink: 0; }
   .checklist-items { display: flex; flex-direction: column; gap: 6px; }
   .checklist-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; background: #f9fafb; border: 1px solid var(--border); border-radius: 7px; font-size: 13.5px; transition: background 0.12s; }
   .checklist-item:hover { background: #f1f4f7; }
-  .checklist-item input[type="checkbox"] { margin-top: 2px; flex-shrink: 0; width: 15px; height: 15px; accent-color: var(--hub-blue); cursor: pointer; }
+  .checklist-item input[type="checkbox"] { margin-top: 3px; flex-shrink: 0; width: 15px; height: 15px; accent-color: var(--hub-blue); cursor: pointer; }
   .checklist-item.checked .item-text { text-decoration: line-through; color: var(--text-muted); }
-  .item-text { flex: 1; line-height: 1.4; }
-  .item-delete { background: none; border: none; color: #ccc; cursor: pointer; font-size: 14px; padding: 0 2px; flex-shrink: 0; transition: color 0.15s; }
+  .item-body { flex: 1; min-width: 0; }
+  .item-text { line-height: 1.4; }
+  .item-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+  .item-delete { background: none; border: none; color: #ccc; cursor: pointer; font-size: 14px; padding: 0 2px; transition: color 0.15s; }
   .item-delete:hover { color: var(--hub-red); }
   .add-item-row { display: none; margin-top: 8px; gap: 8px; }
   .add-item-row.visible { display: flex; }
   .add-item-input { flex: 1; border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-family: Arial, sans-serif; font-size: 13px; color: var(--text-primary); background: var(--white); outline: none; }
   .add-item-input:focus { border-color: var(--hub-blue); }
   .empty-section { font-size: 13px; color: var(--text-muted); font-style: italic; padding: 10px 0; }
+
+  /* ITEM ATTACHMENTS */
+  .item-attachments { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; align-items: center; }
+  .item-attach-img { width: 48px; height: 48px; border-radius: 5px; object-fit: cover; border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; transition: opacity 0.15s; }
+  .item-attach-img:hover { opacity: 0.85; }
+  .item-attach-doc { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background: #eef2f6; border: 1px solid var(--border); border-radius: 5px; font-size: 11.5px; color: var(--hub-navy); text-decoration: none; font-weight: 600; }
+  .item-attach-doc:hover { background: #dce8f4; border-color: var(--hub-blue); }
+  .item-attach-del { background: none; border: none; color: #bbb; cursor: pointer; font-size: 11px; padding: 0 1px; line-height: 1; }
+  .item-attach-del:hover { color: var(--hub-red); }
+  .item-upload-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; background: transparent; border: 1.5px dashed #c8d4de; border-radius: 5px; font-size: 11px; color: var(--text-muted); cursor: pointer; font-family: Arial, sans-serif; font-weight: 700; transition: all 0.15s; }
+  .item-upload-btn:hover { border-color: var(--hub-blue); color: var(--hub-blue); background: #f0f6fd; }
+
+  /* SECTION ATTACHMENTS */
+  .section-attachments { margin-top: 12px; padding: 14px 16px; background: #f4f7fa; border: 1px solid var(--border); border-radius: 8px; }
+  .section-attach-header { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
+  .attach-grid { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
+  .attach-thumb { position: relative; width: 82px; height: 82px; border-radius: 7px; overflow: hidden; border: 1px solid var(--border); background: var(--white); cursor: pointer; flex-shrink: 0; }
+  .attach-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity 0.15s; }
+  .attach-thumb:hover img { opacity: 0.85; }
+  .attach-thumb-del { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.6); border: none; color: var(--white); font-size: 10px; width: 20px; height: 20px; border-radius: 50%; cursor: pointer; display: none; align-items: center; justify-content: center; padding: 0; line-height: 1; }
+  .attach-thumb:hover .attach-thumb-del { display: flex; }
+  .attach-doc { display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; background: var(--white); border: 1px solid var(--border); border-radius: 6px; font-size: 12px; color: var(--hub-navy); text-decoration: none; max-width: 210px; }
+  .attach-doc:hover { background: #f0f4f8; border-color: var(--hub-blue); }
+  .attach-doc-icon { font-size: 16px; flex-shrink: 0; }
+  .attach-doc-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; font-weight: 600; font-size: 12px; }
+  .attach-doc-del { background: none; border: none; color: #ccc; cursor: pointer; font-size: 12px; padding: 0 2px; flex-shrink: 0; margin-left: 2px; }
+  .attach-doc-del:hover { color: var(--hub-red); }
+  .section-upload-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 13px; background: var(--white); border: 1.5px dashed #c8d4de; border-radius: 6px; font-size: 12px; color: var(--text-muted); cursor: pointer; font-family: Arial, sans-serif; font-weight: 700; transition: all 0.15s; }
+  .section-upload-btn:hover { border-color: var(--hub-blue); color: var(--hub-blue); background: #f0f6fd; }
 
   /* BUTTONS */
   .btn { font-family: Arial, sans-serif; font-size: 13px; font-weight: 700; padding: 8px 18px; border-radius: 6px; border: none; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
@@ -178,6 +207,16 @@
 </style>
 </head>
 <body>
+
+<!-- LIGHTBOX -->
+<div id="lightbox" onclick="closeLightbox()">
+  <button id="lightboxClose" onclick="closeLightbox()">&#10005;</button>
+  <img id="lightboxImg" src="" alt="Preview">
+</div>
+
+<!-- Hidden file inputs -->
+<input type="file" id="sectionFileInput" style="display:none" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt" multiple>
+<input type="file" id="itemFileInput" style="display:none" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt" multiple>
 
 <div id="loadingOverlay">
   <img src="https://raw.githubusercontent.com/samantharank/hub-bingo/main/hub-logo.png" alt="HUB" class="loading-logo">
@@ -197,17 +236,12 @@
     </div>
     <div class="login-body">
       <div class="login-label">Email Address</div>
-      <input class="login-input" type="email" id="loginEmail"
-        placeholder="yourname@hubinternational.com"
-        onkeydown="if(event.key==='Enter')attemptLogin()">
+      <input class="login-input" type="email" id="loginEmail" placeholder="yourname@hubinternational.com" onkeydown="if(event.key==='Enter')attemptLogin()">
       <div class="login-hint">Sign in with your @hubinternational.com email.</div>
       <div class="login-error" id="loginError"></div>
       <button class="login-btn" onclick="attemptLogin()">Sign In</button>
     </div>
-    <div class="login-footer">
-      Access is restricted to HUB International staff.<br>
-      Contact your admin if you need help signing in.
-    </div>
+    <div class="login-footer">Access is restricted to HUB International staff.<br>Contact your admin if you need help signing in.</div>
   </div>
 </div>
 
@@ -250,20 +284,11 @@
           </div>
           <img src="https://raw.githubusercontent.com/samantharank/hub-bingo/main/hub-logo.png" alt="HUB" class="hub-logo-banner">
         </div>
-
         <div class="stats-row" id="statsRow"></div>
-
-        <!-- Admin team - admins only -->
         <div class="panel" id="adminTeamPanel" style="display:none;">
-          <div class="panel-header">
-            <div class="panel-header-left">&#128274; Admin Team</div>
-          </div>
-          <div class="panel-body">
-            <div class="admin-team-list" id="adminTeamList"></div>
-          </div>
+          <div class="panel-header"><div class="panel-header-left">&#128274; Admin Team</div></div>
+          <div class="panel-body"><div class="admin-team-list" id="adminTeamList"></div></div>
         </div>
-
-        <!-- Analytics - admins only -->
         <div class="panel" id="analyticsPanel" style="display:none;">
           <div class="panel-header">
             <div class="panel-header-left">&#128202; Analytics</div>
@@ -282,7 +307,6 @@
             </div>
           </div>
         </div>
-
         <div style="font-size:15px;font-weight:700;color:var(--hub-navy);margin-bottom:16px;">All Categories</div>
         <div class="categories-grid" id="categoriesGrid"></div>
       </div>
@@ -307,6 +331,7 @@
 const SUPABASE_URL = 'https://zzpayiejynppqhtynlnk.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp6cGF5aWVqeW5wcHFodHlubG5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MTQwNzEsImV4cCI6MjA4NzQ5MDA3MX0.zV0eYc6raOOWP2ebuX0JJep-mzqWCn74rj0JWcjEaAI';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const STORAGE_BUCKET = 'scl-attachments';
 
 const ADMIN_EMAILS = [
   'jessica.korpan@hubinternational.com',
@@ -340,51 +365,16 @@ const CATEGORIES = [
 ];
 
 const DEFAULT_ITEMS = {
-  qc: {
-    'Quality Control Checklist': ['Verify client information is complete and accurate','Confirm coverage details match application','Check for missing signatures or documents','Review premium calculation','Confirm policy effective date'],
-    'Review Steps': ['Send confirmation to client','Update broker notes','File documents in system']
-  },
-  auto: {
-    'New Policy': ['Collect completed application','Pull MVR for all drivers','Confirm VIN and vehicle details','Bind coverage and issue pink slips','Send policy documents to client'],
-    'Renewal': ['Review renewal terms and premium','Confirm no changes to vehicles or drivers','Process renewal payment','Send renewal confirmation'],
-    'Changes': ['Document change request in notes','Process endorsement','Issue updated documents','Confirm changes with client'],
-    'Cancellations': ['Confirm reason for cancellation','Calculate pro-rata refund if applicable','Issue cancellation notice','Update system records']
-  },
-  motorcycle: {
-    'New Policy': ['Collect application and rider history','Confirm bike details (year, make, model, VIN)','Bind seasonal or annual coverage','Issue policy documents'],
-    'Renewal': ['Review renewal and confirm seasonal storage dates','Process renewal if approved','Send documents to client'],
-    'Changes': ['Document change in file','Process endorsement','Issue updated certificate']
-  },
-  property: {
-    'New Policy': ['Complete property inspection checklist','Confirm address, construction, and updates','Bind coverage','Issue policy documents and invoice'],
-    'Renewal': ['Review renewal terms','Check for any property updates or renovations','Process renewal premium','Confirm with client'],
-    'Changes': ['Document change request','Process endorsement','Issue updated documents']
-  },
-  toys: {
-    'Watercraft': ['Confirm make, model, year, and HP','Collect marine survey if required','Bind coverage','Issue policy documents'],
-    'Snowmobile': ['Confirm sled details and storage location','Bind seasonal coverage','Issue documents'],
-    'ATV / Other': ['Confirm vehicle type and usage','Bind coverage','Issue policy documents']
-  },
-  cancellations: {
-    'Cancellation Steps': ['Receive written cancellation request','Confirm effective date','Calculate any refund owed','Issue cancellation notice to insurer','Notify client in writing'],
-    'Required Documents': ['Signed cancellation request letter','Original pink slips (auto)','Confirmation of alternate coverage (if applicable)']
-  },
-  estate: {
-    'Estate of Deceased': ['Obtain copy of death certificate','Confirm executor / estate trustee information','Review policies in force','Update insured name to estate','Notify insurer of change in risk','Document all actions in file notes'],
-    'Power of Attorney': ['Obtain certified copy of POA document','Confirm POA is active and valid','Update authorization records','Note POA on all relevant policies']
-  },
-  claims: {
-    'Claim Intake': ['Record date, time, and nature of loss','Collect insured contact information','Log claim with insurer','Provide claim number to client','Document in broker system'],
-    'Follow-Up Steps': ['Follow up with adjuster within 48-72 hours','Update client on status','Document all communications','Close file when settlement confirmed']
-  },
-  billing: {
-    'Payment Processing': ['Confirm payment method on file','Process payment in broker system','Issue receipt to client','Update policy payment notes'],
-    'NSF / Returns': ['Note NSF in file','Contact client immediately','Advise of NSF fee','Arrange replacement payment','Notify insurer if policy at risk of cancellation'],
-    'Adjustments': ['Calculate adjustment amount','Process credit or debit endorsement','Confirm with client','Update billing schedule']
-  },
-  ars: {
-    'ARS Procedures': ['Review ARS queue daily','Process outstanding items by priority','Document all ARS actions in file notes','Escalate unresolved items to team lead','Clear queue and confirm completion']
-  }
+  qc: { 'Quality Control Checklist': ['Verify client information is complete and accurate','Confirm coverage details match application','Check for missing signatures or documents','Review premium calculation','Confirm policy effective date'], 'Review Steps': ['Send confirmation to client','Update broker notes','File documents in system'] },
+  auto: { 'New Policy': ['Collect completed application','Pull MVR for all drivers','Confirm VIN and vehicle details','Bind coverage and issue pink slips','Send policy documents to client'], 'Renewal': ['Review renewal terms and premium','Confirm no changes to vehicles or drivers','Process renewal payment','Send renewal confirmation'], 'Changes': ['Document change request in notes','Process endorsement','Issue updated documents','Confirm changes with client'], 'Cancellations': ['Confirm reason for cancellation','Calculate pro-rata refund if applicable','Issue cancellation notice','Update system records'] },
+  motorcycle: { 'New Policy': ['Collect application and rider history','Confirm bike details (year, make, model, VIN)','Bind seasonal or annual coverage','Issue policy documents'], 'Renewal': ['Review renewal and confirm seasonal storage dates','Process renewal if approved','Send documents to client'], 'Changes': ['Document change in file','Process endorsement','Issue updated certificate'] },
+  property: { 'New Policy': ['Complete property inspection checklist','Confirm address, construction, and updates','Bind coverage','Issue policy documents and invoice'], 'Renewal': ['Review renewal terms','Check for any property updates or renovations','Process renewal premium','Confirm with client'], 'Changes': ['Document change request','Process endorsement','Issue updated documents'] },
+  toys: { 'Watercraft': ['Confirm make, model, year, and HP','Collect marine survey if required','Bind coverage','Issue policy documents'], 'Snowmobile': ['Confirm sled details and storage location','Bind seasonal coverage','Issue documents'], 'ATV / Other': ['Confirm vehicle type and usage','Bind coverage','Issue policy documents'] },
+  cancellations: { 'Cancellation Steps': ['Receive written cancellation request','Confirm effective date','Calculate any refund owed','Issue cancellation notice to insurer','Notify client in writing'], 'Required Documents': ['Signed cancellation request letter','Original pink slips (auto)','Confirmation of alternate coverage (if applicable)'] },
+  estate: { 'Estate of Deceased': ['Obtain copy of death certificate','Confirm executor / estate trustee information','Review policies in force','Update insured name to estate','Notify insurer of change in risk','Document all actions in file notes'], 'Power of Attorney': ['Obtain certified copy of POA document','Confirm POA is active and valid','Update authorization records','Note POA on all relevant policies'] },
+  claims: { 'Claim Intake': ['Record date, time, and nature of loss','Collect insured contact information','Log claim with insurer','Provide claim number to client','Document in broker system'], 'Follow-Up Steps': ['Follow up with adjuster within 48-72 hours','Update client on status','Document all communications','Close file when settlement confirmed'] },
+  billing: { 'Payment Processing': ['Confirm payment method on file','Process payment in broker system','Issue receipt to client','Update policy payment notes'], 'NSF / Returns': ['Note NSF in file','Contact client immediately','Advise of NSF fee','Arrange replacement payment','Notify insurer if policy at risk of cancellation'], 'Adjustments': ['Calculate adjustment amount','Process credit or debit endorsement','Confirm with client','Update billing schedule'] },
+  ars: { 'ARS Procedures': ['Review ARS queue daily','Process outstanding items by priority','Document all ARS actions in file notes','Escalate unresolved items to team lead','Clear queue and confirm completion'] }
 };
 
 // ---- STATE ----
@@ -392,6 +382,9 @@ let currentUser = null;
 let isAdmin = false;
 let currentCategory = null;
 let allItems = [];
+let sectionAttachments = {}; // key: catId+'|'+secName -> array
+let pendingSectionUpload = null; // { catId, secName }
+let pendingItemUpload = null;    // { itemId, catId, secName }
 
 // ---- HELPERS ----
 function showToast(msg, duration = 2500) {
@@ -402,43 +395,53 @@ function showToast(msg, duration = 2500) {
 }
 function slugify(str) { return str.toLowerCase().replace(/[^a-z0-9]/g, '_'); }
 function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
-
 function formatDateTime(iso) {
   const dt = new Date(iso);
-  return dt.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })
-    + ' ' + dt.toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' });
+  return dt.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }) + ' ' + dt.toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' });
+}
+function getDisplayName(email) {
+  const m = ADMINS.find(a => a.email === email);
+  return m ? m.name : email.split('@')[0].split('.').map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+}
+function isImage(fileName) { return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(fileName); }
+function docIcon(fileName) {
+  if (/\.pdf$/i.test(fileName)) return '📄';
+  if (/\.(doc|docx)$/i.test(fileName)) return '📝';
+  if (/\.(xls|xlsx)$/i.test(fileName)) return '📊';
+  if (/\.(ppt|pptx)$/i.test(fileName)) return '📋';
+  return '📎';
+}
+function getPublicUrl(path) {
+  return `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${path}`;
 }
 
-function getDisplayName(email) {
-  const match = ADMINS.find(a => a.email === email);
-  if (match) return match.name;
-  return email.split('@')[0].split('.').map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+// ---- LIGHTBOX ----
+function openLightbox(url) {
+  document.getElementById('lightboxImg').src = url;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lightboxImg').src = '';
 }
 
 // ---- LOGIN ----
 function attemptLogin() {
-  const raw = document.getElementById('loginEmail').value.trim();
-  const email = raw.toLowerCase();
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
   const input = document.getElementById('loginEmail');
   const errEl = document.getElementById('loginError');
-  input.classList.remove('error');
-  errEl.classList.remove('visible');
-
+  input.classList.remove('error'); errEl.classList.remove('visible');
   if (!email) return showLoginError('Please enter your email address.', input);
   if (!email.endsWith('@hubinternational.com')) return showLoginError('Access is restricted to @hubinternational.com email addresses. Please use your HUB work email.', input);
-
   currentUser = email;
   isAdmin = ADMIN_EMAILS.includes(email);
   sessionStorage.setItem('sclUser', email);
-
   sb.from('scl_analytics_logins').insert({ email: currentUser }).then(() => {});
   launchApp();
 }
-
 function showLoginError(msg, inputEl) {
   const el = document.getElementById('loginError');
-  el.textContent = msg;
-  el.classList.add('visible');
+  el.textContent = msg; el.classList.add('visible');
   if (inputEl) inputEl.classList.add('error');
 }
 
@@ -448,6 +451,7 @@ async function launchApp() {
   document.getElementById('loadingOverlay').style.display = 'flex';
   setupHeader();
   await loadItemsFromSupabase();
+  await loadSectionAttachments();
   hideLoading();
   init();
 }
@@ -457,7 +461,6 @@ function setupHeader() {
   const namePart = currentUser.split('@')[0];
   const displayName = match ? match.name : namePart.split('.').map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
   const initials = match ? match.initials : namePart.split('.').map(p => p[0]?.toUpperCase() || '').join('').slice(0, 2);
-
   const avatar = document.getElementById('userAvatar');
   avatar.textContent = initials;
   avatar.className = 'user-avatar ' + (isAdmin ? 'admin-user' : 'regular-user');
@@ -467,7 +470,7 @@ function setupHeader() {
 
 function signOut() {
   sessionStorage.removeItem('sclUser');
-  currentUser = null; isAdmin = false; currentCategory = null; allItems = [];
+  currentUser = null; isAdmin = false; currentCategory = null; allItems = []; sectionAttachments = {};
   document.getElementById('app').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('loginEmail').value = '';
@@ -478,13 +481,8 @@ function signOut() {
 
 // ---- SUPABASE DATA ----
 async function loadItemsFromSupabase() {
-  const { data, error } = await sb
-    .from('scl_checklist_items')
-    .select('*')
-    .order('sort_order', { ascending: true });
-
-  if (error) { console.error('Load error:', error); allItems = []; return; }
-
+  const { data, error } = await sb.from('scl_checklist_items').select('*').order('sort_order', { ascending: true });
+  if (error) { console.error(error); allItems = []; return; }
   if (!data || data.length === 0) {
     await seedDefaultItems();
     const { data: seeded } = await sb.from('scl_checklist_items').select('*').order('sort_order', { ascending: true });
@@ -499,138 +497,96 @@ async function seedDefaultItems() {
   CATEGORIES.forEach(cat => {
     cat.sections.forEach(sec => {
       (DEFAULT_ITEMS[cat.id]?.[sec] || []).forEach((text, i) => {
-        rows.push({ category_id: cat.id, section_name: sec, item_text: text, sort_order: i, created_by: 'system' });
+        rows.push({ category_id: cat.id, section_name: sec, item_text: text, sort_order: i, created_by: 'system', attachments: [] });
       });
     });
   });
-  if (rows.length > 0) {
-    const { error } = await sb.from('scl_checklist_items').insert(rows);
-    if (error) console.error('Seed error:', error);
-  }
+  if (rows.length > 0) { const { error } = await sb.from('scl_checklist_items').insert(rows); if (error) console.error(error); }
 }
 
-function getItems(catId, secName) {
-  return allItems.filter(i => i.category_id === catId && i.section_name === secName);
+async function loadSectionAttachments() {
+  const { data, error } = await sb.from('scl_section_attachments').select('*').order('uploaded_at', { ascending: true });
+  if (error) { console.error(error); return; }
+  sectionAttachments = {};
+  (data || []).forEach(a => {
+    const key = a.category_id + '|' + a.section_name;
+    if (!sectionAttachments[key]) sectionAttachments[key] = [];
+    sectionAttachments[key].push(a);
+  });
 }
 
-function getItemCount(catId) {
-  return allItems.filter(i => i.category_id === catId).length;
-}
+function getItems(catId, secName) { return allItems.filter(i => i.category_id === catId && i.section_name === secName); }
+function getItemCount(catId) { return allItems.filter(i => i.category_id === catId).length; }
+function getSectionAttachments(catId, secName) { return sectionAttachments[catId + '|' + secName] || []; }
 
 // ---- INIT ----
 function init() {
-  buildSidebar();
-  buildStatsRow();
-  buildAdminTeam();
-  buildCategoriesGrid();
-
-  if (isAdmin) {
-    document.getElementById('adminTeamPanel').style.display = 'block';
-    document.getElementById('analyticsPanel').style.display = 'block';
-    loadAnalytics();
-  }
-
+  buildSidebar(); buildStatsRow(); buildAdminTeam(); buildCategoriesGrid();
+  if (isAdmin) { document.getElementById('adminTeamPanel').style.display = 'block'; document.getElementById('analyticsPanel').style.display = 'block'; loadAnalytics(); }
   document.getElementById('dashboardView').style.display = 'block';
   document.getElementById('categoryView').style.display = 'none';
   document.querySelector('[data-view="dashboard"]').classList.add('active');
+
+  // Wire up file inputs
+  document.getElementById('sectionFileInput').addEventListener('change', handleSectionFileSelect);
+  document.getElementById('itemFileInput').addEventListener('change', handleItemFileSelect);
 }
 
 function buildSidebar() {
   document.getElementById('sidebarCategories').innerHTML = CATEGORIES.map(cat => `
     <div class="nav-item" onclick="openCategory('${cat.id}',this)" data-cat="${cat.id}">
-      <span class="nav-icon">${cat.icon}</span>
-      ${cat.name}
+      <span class="nav-icon">${cat.icon}</span>${cat.name}
       <span class="nav-count">${getItemCount(cat.id)}</span>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
-
 function buildCategoriesGrid() {
   document.getElementById('categoriesGrid').innerHTML = CATEGORIES.map(cat => `
     <div class="category-card" onclick="openCategory('${cat.id}')" style="--cat-color:${cat.color};--cat-bg:${cat.bg}">
       <div class="cat-icon" style="background:${cat.bg};color:${cat.color};">${cat.icon}</div>
       <div class="cat-name">${cat.name}</div>
       <div class="cat-count">${getItemCount(cat.id)} items</div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
-
 function buildStatsRow() {
   const total = allItems.length;
   const secs = new Set(allItems.map(i => i.category_id + '|' + i.section_name)).size;
   document.getElementById('statsRow').innerHTML = [
-    { num: CATEGORIES.length, label: 'Categories' },
-    { num: total, label: 'Total Items' },
-    { num: ADMINS.length, label: 'Admins' },
-    { num: secs, label: 'Sections' }
+    { num: CATEGORIES.length, label: 'Categories' }, { num: total, label: 'Total Items' },
+    { num: ADMINS.length, label: 'Admins' }, { num: secs, label: 'Sections' }
   ].map(s => `<div class="stat-card"><div class="stat-num">${s.num}</div><div class="stat-label">${s.label}</div></div>`).join('');
 }
-
 function buildAdminTeam() {
   document.getElementById('adminTeamList').innerHTML = ADMINS.map(a => `
     <div class="admin-team-card">
       <div class="admin-avatar-sm">${a.initials}</div>
       <div><div class="admin-card-name">${a.name}</div><div class="admin-card-role">Admin</div></div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
 // ---- ANALYTICS ----
 async function loadAnalytics() {
   document.getElementById('analyticsViews').innerHTML = '<div class="analytics-empty">Loading...</div>';
   document.getElementById('analyticsLogins').innerHTML = '<div class="analytics-empty">Loading...</div>';
-
   const [viewsRes, loginsRes] = await Promise.all([
     sb.from('scl_analytics_pageviews').select('category_id'),
     sb.from('scl_analytics_logins').select('email, logged_in_at').order('logged_in_at', { ascending: false }).limit(25)
   ]);
-
-  // Category views
   if (viewsRes.data && viewsRes.data.length > 0) {
     const counts = {};
     viewsRes.data.forEach(v => { counts[v.category_id] = (counts[v.category_id] || 0) + 1; });
     const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
     const max = sorted[0][1];
-    document.getElementById('analyticsViews').innerHTML = `
-      <table class="analytics-table">
-        <thead><tr><th>Category</th><th>Views</th></tr></thead>
-        <tbody>
-          ${sorted.map(([catId, count]) => {
-            const cat = CATEGORIES.find(c => c.id === catId);
-            const pct = Math.round((count / max) * 100);
-            return `<tr>
-              <td>${cat ? cat.icon + ' ' + cat.name : catId}</td>
-              <td><div class="bar-wrap">
-                <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
-                <span class="bar-num">${count}</span>
-              </div></td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>`;
-  } else {
-    document.getElementById('analyticsViews').innerHTML = '<div class="analytics-empty">No views recorded yet.</div>';
-  }
-
-  // Logins
+    document.getElementById('analyticsViews').innerHTML = `<table class="analytics-table"><thead><tr><th>Category</th><th>Views</th></tr></thead><tbody>${sorted.map(([catId, count]) => {
+      const cat = CATEGORIES.find(c => c.id === catId);
+      return `<tr><td>${cat ? cat.icon + ' ' + cat.name : catId}</td><td><div class="bar-wrap"><div class="bar-track"><div class="bar-fill" style="width:${Math.round((count/max)*100)}%"></div></div><span class="bar-num">${count}</span></div></td></tr>`;
+    }).join('')}</tbody></table>`;
+  } else { document.getElementById('analyticsViews').innerHTML = '<div class="analytics-empty">No views recorded yet.</div>'; }
   if (loginsRes.data && loginsRes.data.length > 0) {
-    document.getElementById('analyticsLogins').innerHTML = `
-      <table class="analytics-table">
-        <thead><tr><th>User</th><th>Signed In</th></tr></thead>
-        <tbody>
-          ${loginsRes.data.map(l => {
-            const isAdminUser = ADMIN_EMAILS.includes(l.email);
-            const name = getDisplayName(l.email);
-            return `<tr>
-              <td><span class="login-name">${isAdminUser ? '<span class="admin-dot"></span>' : ''}${name}</span></td>
-              <td><span class="login-time">${formatDateTime(l.logged_in_at)}</span></td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>`;
-  } else {
-    document.getElementById('analyticsLogins').innerHTML = '<div class="analytics-empty">No logins recorded yet.</div>';
-  }
+    document.getElementById('analyticsLogins').innerHTML = `<table class="analytics-table"><thead><tr><th>User</th><th>Signed In</th></tr></thead><tbody>${loginsRes.data.map(l => {
+      const isAdminUser = ADMIN_EMAILS.includes(l.email);
+      return `<tr><td><span class="login-name">${isAdminUser ? '<span class="admin-dot"></span>' : ''}${getDisplayName(l.email)}</span></td><td><span class="login-time">${formatDateTime(l.logged_in_at)}</span></td></tr>`;
+    }).join('')}</tbody></table>`;
+  } else { document.getElementById('analyticsLogins').innerHTML = '<div class="analytics-empty">No logins recorded yet.</div>'; }
 }
 
 // ---- NAVIGATION ----
@@ -647,34 +603,37 @@ async function openCategory(catId, navEl) {
   currentCategory = catId;
   const cat = CATEGORIES.find(c => c.id === catId);
   if (!cat) return;
-
   sb.from('scl_analytics_pageviews').insert({ email: currentUser, category_id: catId }).then(() => {});
-
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   (navEl || document.querySelector(`[data-cat="${catId}"]`))?.classList.add('active');
-
   document.getElementById('dashboardView').style.display = 'none';
   document.getElementById('categoryView').style.display = 'block';
   document.getElementById('catViewTitle').textContent = cat.name;
   document.getElementById('catViewSub').textContent = `${getItemCount(catId)} items across ${cat.sections.length} sections`;
   document.getElementById('catViewActions').innerHTML = isAdmin
     ? `<button class="btn btn-primary btn-sm" onclick="addSection('${cat.id}')">+ Add Section</button>` : '';
-
   renderChecklist(cat);
 }
 
+// ---- RENDER CHECKLIST ----
 function renderChecklist(cat) {
   document.getElementById('checklistContainer').innerHTML = cat.sections.map(secName => {
     const items = getItems(cat.id, secName);
+    const secAttachments = getSectionAttachments(cat.id, secName);
     const itemsHtml = items.length === 0
       ? `<div class="empty-section">${isAdmin ? 'No items yet - click + Item to add.' : 'No items yet.'}</div>`
       : items.map(item => renderItem(cat.id, secName, item)).join('');
+
+    const sectionAttachHtml = renderSectionAttachments(cat.id, secName, secAttachments);
 
     return `
       <div class="checklist-section">
         <div class="checklist-section-title">
           <span>${secName}</span>
-          ${isAdmin ? `<button class="btn btn-secondary btn-sm" onclick="showAddItemRow('${cat.id}','${secName}')">+ Item</button>` : ''}
+          <div class="section-title-actions">
+            ${isAdmin ? `<button class="btn btn-secondary btn-sm" onclick="triggerSectionUpload('${cat.id}','${secName}')">&#128206; Attach</button>` : ''}
+            ${isAdmin ? `<button class="btn btn-secondary btn-sm" onclick="showAddItemRow('${cat.id}','${secName}')">+ Item</button>` : ''}
+          </div>
         </div>
         <div class="checklist-items" id="items_${cat.id}_${slugify(secName)}">${itemsHtml}</div>
         <div class="add-item-row" id="addrow_${cat.id}_${slugify(secName)}">
@@ -685,28 +644,173 @@ function renderChecklist(cat) {
             onclick="saveNewItem('${cat.id}','${secName}')">Add</button>
           <button class="btn btn-secondary btn-sm" onclick="hideAddItemRow('${cat.id}','${secName}')">Cancel</button>
         </div>
+        ${sectionAttachHtml}
       </div>`;
   }).join('');
 }
 
 function renderItem(catId, secName, item) {
-  const del = isAdmin
-    ? `<button class="item-delete" onclick="deleteItem(${item.id},'${catId}','${secName}')" title="Remove">&#10005;</button>`
-    : '';
+  const attachments = item.attachments || [];
+  const attachHtml = renderItemAttachments(catId, secName, item.id, attachments);
+  const del = isAdmin ? `<button class="item-delete" onclick="deleteItem(${item.id},'${catId}','${secName}')" title="Remove">&#10005;</button>` : '';
+  const uploadBtn = isAdmin ? `<button class="item-upload-btn" onclick="triggerItemUpload(${item.id},'${catId}','${secName}')">&#128206; Attach</button>` : '';
   return `
     <div class="checklist-item" id="item_${item.id}">
       <input type="checkbox" onchange="this.closest('.checklist-item').classList.toggle('checked',this.checked)">
-      <div class="item-text">${item.item_text}</div>
-      ${del}
+      <div class="item-body">
+        <div class="item-text">${item.item_text}</div>
+        ${attachments.length > 0 || isAdmin ? `<div class="item-attachments" id="itemattach_${item.id}">${attachHtml}${uploadBtn}</div>` : ''}
+      </div>
+      <div class="item-actions">${del}</div>
     </div>`;
 }
 
-// ---- ADMIN ACTIONS ----
+function renderItemAttachments(catId, secName, itemId, attachments) {
+  return attachments.map(a => {
+    const url = getPublicUrl(a.path);
+    if (isImage(a.name)) {
+      return `<img src="${url}" class="item-attach-img" onclick="openLightbox('${url}')" title="${a.name}">
+              ${isAdmin ? `<button class="item-attach-del" onclick="deleteItemAttachment(${itemId},'${catId}','${secName}','${a.path}','${a.name}')" title="Remove">&#10005;</button>` : ''}`;
+    } else {
+      return `<a href="${url}" target="_blank" class="item-attach-doc">${docIcon(a.name)} <span>${a.name}</span></a>
+              ${isAdmin ? `<button class="item-attach-del" onclick="deleteItemAttachment(${itemId},'${catId}','${secName}','${a.path}','${a.name}')" title="Remove">&#10005;</button>` : ''}`;
+    }
+  }).join('');
+}
+
+function renderSectionAttachments(catId, secName, attachments) {
+  if (attachments.length === 0 && !isAdmin) return '';
+  const filesHtml = attachments.map(a => {
+    const url = getPublicUrl(a.file_path);
+    if (isImage(a.file_name)) {
+      return `<div class="attach-thumb" onclick="openLightbox('${url}')">
+        <img src="${url}" alt="${a.file_name}">
+        ${isAdmin ? `<button class="attach-thumb-del" onclick="event.stopPropagation();deleteSectionAttachment(${a.id},'${a.file_path}','${catId}','${secName}')">&#10005;</button>` : ''}
+      </div>`;
+    } else {
+      return `<a href="${url}" target="_blank" class="attach-doc">
+        <span class="attach-doc-icon">${docIcon(a.file_name)}</span>
+        <span class="attach-doc-name">${a.file_name}</span>
+        ${isAdmin ? `<button class="attach-doc-del" onclick="event.preventDefault();event.stopPropagation();deleteSectionAttachment(${a.id},'${a.file_path}','${catId}','${secName}')">&#10005;</button>` : ''}
+      </a>`;
+    }
+  }).join('');
+
+  if (attachments.length === 0) return ''; // only show section if has files (upload button is in header)
+
+  return `
+    <div class="section-attachments" id="secattach_${catId}_${slugify(secName)}">
+      <div class="section-attach-header">&#128206; Attachments</div>
+      <div class="attach-grid" id="attachgrid_${catId}_${slugify(secName)}">${filesHtml}</div>
+    </div>`;
+}
+
+// ---- SECTION FILE UPLOAD ----
+function triggerSectionUpload(catId, secName) {
+  pendingSectionUpload = { catId, secName };
+  pendingItemUpload = null;
+  const input = document.getElementById('sectionFileInput');
+  input.value = '';
+  input.click();
+}
+
+async function handleSectionFileSelect(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length || !pendingSectionUpload) return;
+  const { catId, secName } = pendingSectionUpload;
+  showToast(`Uploading ${files.length} file${files.length > 1 ? 's' : ''}...`, 4000);
+
+  for (const file of files) {
+    const ext = file.name.split('.').pop();
+    const path = `sections/${catId}/${slugify(secName)}/${Date.now()}_${file.name}`;
+    const { error: upErr } = await sb.storage.from(STORAGE_BUCKET).upload(path, file, { upsert: false });
+    if (upErr) { showToast(`Failed to upload ${file.name}`); console.error(upErr); continue; }
+
+    const { data: row, error: dbErr } = await sb.from('scl_section_attachments').insert({
+      category_id: catId, section_name: secName,
+      file_name: file.name, file_path: path,
+      file_type: file.type, uploaded_by: currentUser
+    }).select().single();
+    if (dbErr) { console.error(dbErr); continue; }
+
+    const key = catId + '|' + secName;
+    if (!sectionAttachments[key]) sectionAttachments[key] = [];
+    sectionAttachments[key].push(row);
+  }
+
+  showToast('Upload complete.');
+  const cat = CATEGORIES.find(c => c.id === catId);
+  if (cat) renderChecklist(cat);
+}
+
+async function deleteSectionAttachment(id, filePath, catId, secName) {
+  if (!confirm('Remove this attachment?')) return;
+  await sb.storage.from(STORAGE_BUCKET).remove([filePath]);
+  await sb.from('scl_section_attachments').delete().eq('id', id);
+  const key = catId + '|' + secName;
+  sectionAttachments[key] = (sectionAttachments[key] || []).filter(a => a.id !== id);
+  const cat = CATEGORIES.find(c => c.id === catId);
+  if (cat) renderChecklist(cat);
+  showToast('Attachment removed.');
+}
+
+// ---- ITEM FILE UPLOAD ----
+function triggerItemUpload(itemId, catId, secName) {
+  pendingItemUpload = { itemId, catId, secName };
+  pendingSectionUpload = null;
+  const input = document.getElementById('itemFileInput');
+  input.value = '';
+  input.click();
+}
+
+async function handleItemFileSelect(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length || !pendingItemUpload) return;
+  const { itemId, catId, secName } = pendingItemUpload;
+  const item = allItems.find(i => i.id === itemId);
+  if (!item) return;
+  showToast(`Uploading ${files.length} file${files.length > 1 ? 's' : ''}...`, 4000);
+
+  const currentAttachments = item.attachments || [];
+  const newAttachments = [...currentAttachments];
+
+  for (const file of files) {
+    const path = `items/${catId}/${itemId}/${Date.now()}_${file.name}`;
+    const { error: upErr } = await sb.storage.from(STORAGE_BUCKET).upload(path, file, { upsert: false });
+    if (upErr) { showToast(`Failed to upload ${file.name}`); console.error(upErr); continue; }
+    newAttachments.push({ name: file.name, path });
+  }
+
+  const { error: dbErr } = await sb.from('scl_checklist_items').update({ attachments: newAttachments }).eq('id', itemId);
+  if (dbErr) { console.error(dbErr); showToast('Error saving attachment.'); return; }
+
+  item.attachments = newAttachments;
+  showToast('Upload complete.');
+
+  // Re-render just this item
+  const itemEl = document.getElementById(`item_${itemId}`);
+  if (itemEl) {
+    itemEl.outerHTML = renderItem(catId, secName, item);
+  }
+}
+
+async function deleteItemAttachment(itemId, catId, secName, filePath, fileName) {
+  if (!confirm(`Remove "${fileName}"?`)) return;
+  const item = allItems.find(i => i.id === itemId);
+  if (!item) return;
+  await sb.storage.from(STORAGE_BUCKET).remove([filePath]);
+  item.attachments = (item.attachments || []).filter(a => a.path !== filePath);
+  await sb.from('scl_checklist_items').update({ attachments: item.attachments }).eq('id', itemId);
+  const itemEl = document.getElementById(`item_${itemId}`);
+  if (itemEl) itemEl.outerHTML = renderItem(catId, secName, item);
+  showToast('Attachment removed.');
+}
+
+// ---- CHECKLIST ITEM ACTIONS ----
 function showAddItemRow(catId, secName) {
   const row = document.getElementById(`addrow_${catId}_${slugify(secName)}`);
   if (row) { row.classList.add('visible'); row.querySelector('input').focus(); }
 }
-
 function hideAddItemRow(catId, secName) {
   const row = document.getElementById(`addrow_${catId}_${slugify(secName)}`);
   if (row) { row.classList.remove('visible'); row.querySelector('input').value = ''; }
@@ -717,27 +821,17 @@ async function saveNewItem(catId, secName) {
   const btn = document.getElementById(`addbtn_${catId}_${slugify(secName)}`);
   const text = input.value.trim();
   if (!text) return;
-
   btn.disabled = true;
-  const sortOrder = getItems(catId, secName).length;
-
-  const { data, error } = await sb
-    .from('scl_checklist_items')
-    .insert({ category_id: catId, section_name: secName, item_text: text, sort_order: sortOrder, created_by: currentUser })
-    .select()
-    .single();
-
+  const { data, error } = await sb.from('scl_checklist_items')
+    .insert({ category_id: catId, section_name: secName, item_text: text, sort_order: getItems(catId, secName).length, created_by: currentUser, attachments: [] })
+    .select().single();
   btn.disabled = false;
-
-  if (error) { showToast('Error saving item. Please try again.'); console.error(error); return; }
-
+  if (error) { showToast('Error saving item.'); console.error(error); return; }
   allItems.push(data);
   input.value = '';
-
   const container = document.getElementById(`items_${catId}_${slugify(secName)}`);
   container.querySelectorAll('.empty-section').forEach(e => e.remove());
   container.insertAdjacentHTML('beforeend', renderItem(catId, secName, data));
-
   buildSidebar();
   const cat = CATEGORIES.find(c => c.id === catId);
   document.getElementById('catViewSub').textContent = `${getItemCount(catId)} items across ${cat.sections.length} sections`;
@@ -746,10 +840,13 @@ async function saveNewItem(catId, secName) {
 
 async function deleteItem(itemId, catId, secName) {
   if (!confirm('Remove this item?')) return;
-
+  const item = allItems.find(i => i.id === itemId);
+  if (item?.attachments?.length) {
+    const paths = item.attachments.map(a => a.path);
+    await sb.storage.from(STORAGE_BUCKET).remove(paths);
+  }
   const { error } = await sb.from('scl_checklist_items').delete().eq('id', itemId);
   if (error) { showToast('Error deleting item.'); console.error(error); return; }
-
   allItems = allItems.filter(i => i.id !== itemId);
   document.getElementById(`item_${itemId}`)?.remove();
   buildSidebar();
